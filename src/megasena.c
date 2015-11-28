@@ -25,9 +25,11 @@ pg_sortear_numeros(PG_FUNCTION_ARGS)
 
   int qtd, nums[MAX_NUMEROS], i;
 
+  //ArrayType *result;
+
   elog(DEBUG1, "sortear_numeros(%d, %d, %d, %d)", min_num, max_num, min_qtd, max_qtd);
 
-  // TODO: evitar situações de loop infinito - ex: sortear_numeros(1, 2, 3, 4)
+  // TODO: evitar situações de loop infinito (sanity check) - ex: sortear_numeros(1, 2, 3, 4)
   // ...
 
   // sortear números conforme parâmetros
@@ -38,7 +40,13 @@ pg_sortear_numeros(PG_FUNCTION_ARGS)
     elog(DEBUG1, "  nums[%d] = %d", i, nums[i]);
 
   // TODO: retornar "nums" na forma de int2[]
+  // /usr/src/postgresql-9.3/src/backend/utils/adt/arrayfuncs.c
+
+  // dica: ArrayType * construct_array(Datum *elems, int nelems,
+  //   Oid elmtype, int elmlen, bool elmbyval, char elmalign)
+
   PG_RETURN_NULL();
+  //PG_RETURN_ARRAYTYPE_P(result);
 }
 
 // function calcular_hash(numeros int2[]): int8
@@ -46,7 +54,23 @@ PG_FUNCTION_INFO_V1(pg_calcular_hash);
 Datum
 pg_calcular_hash(PG_FUNCTION_ARGS)
 {
-  PG_RETURN_NULL();
+  // TODO: ler array 1D e varrer os elementos
+  uint64 hash = 1024ULL * 1024ULL * 1024ULL * 1024ULL;
+
+  /*
+  ArrayType *numeros = PG_GETARG_ARRAYTYPE_P(0);
+  Oid collation = PG_GET_COLLATION();
+  int ndims = ARR_NDIM(numeros);
+  int *dims = ARR_DIMS(numeros);
+  Oid eltype = ARR_ELEMTYPE(numeros);
+
+  // dica: Datum array_eq(PG_FUNCTION_ARGS)
+  // /usr/src/postgresql-9.3/src/backend/utils/adt/arrayfuncs.c
+  PG_FREE_IF_COPY(numeros, 0);
+  */
+
+  //PG_RETURN_NULL();
+  PG_RETURN_INT64(hash);
 }
 
 // function calcular_acertos(hash_sorteio int8, hash_aposta int8): int2
@@ -58,7 +82,7 @@ pg_calcular_acertos(PG_FUNCTION_ARGS)
   uint64 hash_aposta = PG_GETARG_INT64(1);
   uint16 qtd_acertos;
 
-  // calcular a quantidade de acertos
+  // calcular a quantidade de acertos da aposta no sorteio
   qtd_acertos = acertos(hash_sorteio, hash_aposta);
 
   PG_RETURN_INT16(qtd_acertos);
@@ -93,7 +117,7 @@ hash_aposta(const int nums[], const int qtd)
  * Retorna a quantidade de elementos detectados.
  */
 int
-str2nums(int *nums[], const char *ns)
+str2nums(int** nums, const char *ns)
 {
   char *tk;
   char cns[3 * MAX_NUMEROS];
@@ -139,13 +163,9 @@ acertos(const int8 hash_sorteado, const int8 hash_aposta)
 int sortear(int** nums,
   const int min_num, const int max_num, const int min_qtd, const int max_qtd)
 {
-  int i, j, qtd, num;
-
-  //printf("min_num = %d, max_num = %d, min_qtd = %d, max_qtd = %d\n",
-  //  min_num, max_num, min_qtd, max_qtd);
+  int i, j, qtd, num = 0;
 
   memset(nums, 0, sizeof(int) * MAX_NUMEROS);
-
   srand(time(NULL));
 
   // sortear quantidade de itens
@@ -155,10 +175,9 @@ int sortear(int** nums,
   for (i = 0; i < qtd; i++) {
     j = i;
     do {
-      if (j == i || nums[j] == num) {
+      if (j == i || (int) nums[j] == num) {
         num = rand() % (max_num - min_num + 1) + min_num;
         j = i;
-        //printf("\ti = %d, j = %d, num = %d\n", i, j, num);
       }
     } while (--j >= 0);
     nums[i] = num;
