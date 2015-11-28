@@ -7,7 +7,8 @@
 /**
  * Dadas as condições, preenche um array de números inteiros.
  */
-int sortear_numeros(int** nums, int min_num, int max_num, int min_qtd, int max_qtd)
+int sortear_numeros(int** nums,
+  const int min_num, const int max_num, const int min_qtd, const int max_qtd)
 {
   int i, j, qtd, num;
 
