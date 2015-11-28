@@ -1,0 +1,5 @@
+# megasena extension
+comment = 'funções para processamento da Mega-Sena'
+default_version = '1.0'
+module_pathname = '$libdir/megasena'
+relocatable = true
