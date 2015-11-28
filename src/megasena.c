@@ -25,6 +25,7 @@ pg_sortear_numeros(PG_FUNCTION_ARGS)
 
   int qtd, nums[MAX_NUMEROS], i;
 
+  char snums[max_qtd * sizeof(int)], s2[5], *retval;
   //ArrayType *result;
 
   elog(DEBUG1, "sortear_numeros(%d, %d, %d, %d)", min_num, max_num, min_qtd, max_qtd);
@@ -39,14 +40,32 @@ pg_sortear_numeros(PG_FUNCTION_ARGS)
   for (i = 0; i < qtd; i++)
     elog(DEBUG1, "  nums[%d] = %d", i, nums[i]);
 
+  strcpy(snums, "{");
+  for (i = 0; i < qtd; i++) {
+    if (i > 0) {
+      strcat(snums, ",");
+    }
+    sprintf(s2, "%d", nums[i]);
+    strcat(snums, s2);
+  }
+  strcat(snums, "}");
+
+  elog(DEBUG1, "snums = %s (%d)", snums, strlen(snums));
+  //retval = pstrdup(snums);
+  //retval = (char *) palloc(strlen(snums) + 1);
+  //strcpy(retval, snums);
+  //elog(DEBUG1, "retval = %s", retval);
+
   // TODO: retornar "nums" na forma de int2[]
   // /usr/src/postgresql-9.3/src/backend/utils/adt/arrayfuncs.c
 
   // dica: ArrayType * construct_array(Datum *elems, int nelems,
   //   Oid elmtype, int elmlen, bool elmbyval, char elmalign)
 
-  PG_RETURN_NULL();
+  //PG_RETURN_NULL();
   //PG_RETURN_ARRAYTYPE_P(result);
+  //PG_RETURN_CSTRING(retval);
+  PG_RETURN_CSTRING(pstrdup(snums));
 }
 
 // function calcular_hash(numeros int2[]): int8
