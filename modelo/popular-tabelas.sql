@@ -66,5 +66,5 @@ WHERE b.id = a.id AND c.id = 5;
 -- resultados e estatísticas do concurso
 select count(1), min(acertos), max(acertos), avg(acertos), stddev(acertos) from calculo;
 select acertos, count(1) AS qtd from calculo group by acertos order by acertos desc;
-select a.id, id_loterica, data_hora, numeros, acertos from calculo c join aposta a on (a.id = c.id) where acertos = (select max(acertos) from calculo);
+select a.id, municipio, uf, data_hora, numeros, acertos from calculo c join aposta a on (a.id = c.id) join loterica l on (l.id = a.id_loterica) where acertos = (select max(acertos) from calculo);
 
