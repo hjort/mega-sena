@@ -39,4 +39,5 @@ CREATE TABLE calculo (
   acertos int2
 );
 ALTER TABLE calculo ADD FOREIGN KEY (id) REFERENCES aposta (id);
+CREATE INDEX ON calculo (acertos);
 
