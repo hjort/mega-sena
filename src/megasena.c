@@ -22,53 +22,36 @@ pg_sortear_numeros(PG_FUNCTION_ARGS)
   int max_num = PG_GETARG_INT32(1);
   int min_qtd = PG_GETARG_INT32(2);
   int max_qtd = PG_GETARG_INT32(3);
-
   int qtd, nums[MAX_NUMEROS], i;
-
-  char snums[max_qtd * sizeof(int)], s2[5], *retval;
-  //ArrayType *result;
+  int16 int2s[MAX_NUMEROS];
+  int2vector *int2Array;
 
   elog(DEBUG1, "pg_sortear_numeros(%d, %d, %d, %d)", min_num, max_num, min_qtd, max_qtd);
 
   // TODO: evitar situações de loop infinito (sanity check) - ex: sortear_numeros(1, 2, 3, 4)
-  // ...
+  /*
+  if (...) {
+    elog(ERROR, "xaxaxaxa: %d (máx: %d)", qtd, MAX_NUMEROS);
+    PG_RETURN_NULL();
+  }
+  */
 
   // sortear números conforme parâmetros
   qtd = sortear(&nums, min_num, max_num, min_qtd, max_qtd);
 
+  /*
   elog(DEBUG1, "qtd = %d", qtd);
   for (i = 0; i < qtd; i++)
     elog(DEBUG1, "  nums[%d] = %d", i, nums[i]);
+  */
 
-  strcpy(snums, "{");
-  for (i = 0; i < qtd; i++) {
-    if (i > 0) {
-      strcat(snums, ",");
-    }
-    sprintf(s2, "%d", nums[i]);
-    strcat(snums, s2);
-  }
-  strcat(snums, "}");
+  memset(int2s, 0, sizeof(int2s));
+  for (i = 0; i < qtd; i++)
+    int2s[i] = (uint16) nums[i];
 
-  elog(DEBUG1, "snums = %s (%d)", snums, strlen(snums));
-  //retval = pstrdup(snums);
-  //retval = (char *) palloc(strlen(snums) + 1);
-  //strcpy(retval, snums);
-  //elog(DEBUG1, "retval = %s", retval);
+  int2Array = buildint2vector(int2s, qtd);
 
-  // TODO: retornar "nums" na forma de int2[]
-
-  // dica: int2vector * buildint2vector(const int16 *int2s, int n)
-  // /usr/src/postgresql-9.3/src/backend/utils/adt/int.c
-
-  // dica: ArrayType * construct_array(Datum *elems, int nelems,
-  //   Oid elmtype, int elmlen, bool elmbyval, char elmalign)
-  // /usr/src/postgresql-9.3/src/backend/utils/adt/arrayfuncs.c
-
-  //PG_RETURN_NULL();
-  //PG_RETURN_ARRAYTYPE_P(result);
-  //PG_RETURN_CSTRING(retval);
-  PG_RETURN_CSTRING(pstrdup(snums));
+  PG_RETURN_POINTER(int2Array);
 }
 
 // function calcular_hash(numeros int2[]): int8
@@ -81,7 +64,7 @@ pg_calcular_hash(PG_FUNCTION_ARGS)
   unsigned int nums[MAX_NUMEROS], i;
   uint64 hash = 0;
 
-  elog(DEBUG1, "pg_calcular_hash(%d)", qtd);
+  elog(DEBUG1, "pg_calcular_hash(qtd=%d)", qtd);
 
   // verificar quantidade máxima de itens
   if (qtd > MAX_NUMEROS) {
@@ -108,6 +91,8 @@ pg_calcular_acertos(PG_FUNCTION_ARGS)
   uint64 hash_sorteio = PG_GETARG_INT64(0);
   uint64 hash_aposta = PG_GETARG_INT64(1);
   uint16 qtd_acertos;
+
+  elog(DEBUG1, "pg_calcular_acertos(%llu, %llu)", hash_sorteio, hash_aposta);
 
   // calcular a quantidade de acertos da aposta no sorteio
   qtd_acertos = acertos(hash_sorteio, hash_aposta);
@@ -195,7 +180,7 @@ int sortear(int** nums,
   int i, j, qtd, num = 0;
 
   memset(nums, 0, sizeof(int) * MAX_NUMEROS);
-  srand(time(NULL));
+  //srand(time(NULL));
 
   // sortear quantidade de itens
   qtd = (max_qtd != min_qtd ? rand() % (max_qtd - min_qtd + 1) + min_qtd : max_qtd);

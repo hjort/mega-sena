@@ -4,11 +4,10 @@
 \echo Use "CREATE EXTENSION megasena" to load this file. \quit
 
 CREATE FUNCTION sortear_numeros(min_num int, max_num int, min_qtd int, max_qtd int)
-	RETURNS varchar
---	RETURNS int2[]
+	RETURNS int2[]
 	AS 'MODULE_PATHNAME', 'pg_sortear_numeros'
 	LANGUAGE C
-	IMMUTABLE STRICT;
+	VOLATILE STRICT;
 
 CREATE FUNCTION calcular_hash(numeros int2[])
 	RETURNS int8
