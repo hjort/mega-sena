@@ -28,7 +28,7 @@ pg_sortear_numeros(PG_FUNCTION_ARGS)
   char snums[max_qtd * sizeof(int)], s2[5], *retval;
   //ArrayType *result;
 
-  elog(DEBUG1, "sortear_numeros(%d, %d, %d, %d)", min_num, max_num, min_qtd, max_qtd);
+  elog(DEBUG1, "pg_sortear_numeros(%d, %d, %d, %d)", min_num, max_num, min_qtd, max_qtd);
 
   // TODO: evitar situações de loop infinito (sanity check) - ex: sortear_numeros(1, 2, 3, 4)
   // ...
@@ -57,10 +57,13 @@ pg_sortear_numeros(PG_FUNCTION_ARGS)
   //elog(DEBUG1, "retval = %s", retval);
 
   // TODO: retornar "nums" na forma de int2[]
-  // /usr/src/postgresql-9.3/src/backend/utils/adt/arrayfuncs.c
+
+  // dica: int2vector * buildint2vector(const int16 *int2s, int n)
+  // /usr/src/postgresql-9.3/src/backend/utils/adt/int.c
 
   // dica: ArrayType * construct_array(Datum *elems, int nelems,
   //   Oid elmtype, int elmlen, bool elmbyval, char elmalign)
+  // /usr/src/postgresql-9.3/src/backend/utils/adt/arrayfuncs.c
 
   //PG_RETURN_NULL();
   //PG_RETURN_ARRAYTYPE_P(result);
@@ -73,22 +76,27 @@ PG_FUNCTION_INFO_V1(pg_calcular_hash);
 Datum
 pg_calcular_hash(PG_FUNCTION_ARGS)
 {
-  // TODO: ler array 1D e varrer os elementos
-  uint64 hash = 1024ULL * 1024ULL * 1024ULL * 1024ULL;
+  int2vector *int2Array = (int2vector *) PG_GETARG_POINTER(0);
+  const int qtd = int2Array->dim1;
+  unsigned int nums[MAX_NUMEROS], i;
+  uint64 hash = 0;
 
-  /*
-  ArrayType *numeros = PG_GETARG_ARRAYTYPE_P(0);
-  Oid collation = PG_GET_COLLATION();
-  int ndims = ARR_NDIM(numeros);
-  int *dims = ARR_DIMS(numeros);
-  Oid eltype = ARR_ELEMTYPE(numeros);
+  elog(DEBUG1, "pg_calcular_hash(%d)", qtd);
 
-  // dica: Datum array_eq(PG_FUNCTION_ARGS)
-  // /usr/src/postgresql-9.3/src/backend/utils/adt/arrayfuncs.c
-  PG_FREE_IF_COPY(numeros, 0);
-  */
+  // verificar quantidade máxima de itens
+  if (qtd > MAX_NUMEROS) {
+    elog(ERROR, "Quantidade de itens ultrapassa o limite: %d (máx: %d)", qtd, MAX_NUMEROS);
+    PG_RETURN_NULL();
+  }
 
-  //PG_RETURN_NULL();
+  memset(nums, 0, sizeof(nums));
+
+  for (i = 0; i < qtd; i++)
+    nums[i] = int2Array->values[i];
+
+  // calcular o hash do array de números
+  hash = hash_aposta(nums, qtd);
+
   PG_RETURN_INT64(hash);
 }
 
@@ -135,6 +143,7 @@ hash_aposta(const int nums[], const int qtd)
  * Converte uma string em um array de números inteiros.
  * Retorna a quantidade de elementos detectados.
  */
+/*
 int
 str2nums(int** nums, const char *ns)
 {
@@ -158,6 +167,7 @@ str2nums(int** nums, const char *ns)
 
   return qtd;
 }
+*/
 
 /**
  * Retorna a quantidade de acertos da aposta com relação ao número sorteado.

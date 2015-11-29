@@ -10,8 +10,7 @@ CREATE FUNCTION sortear_numeros(min_num int, max_num int, min_qtd int, max_qtd i
 	LANGUAGE C
 	IMMUTABLE STRICT;
 
-CREATE FUNCTION calcular_hash(numeros varchar)
---CREATE FUNCTION calcular_hash(numeros int2[])
+CREATE FUNCTION calcular_hash(numeros int2[])
 	RETURNS int8
 	AS 'MODULE_PATHNAME', 'pg_calcular_hash'
 	LANGUAGE C
