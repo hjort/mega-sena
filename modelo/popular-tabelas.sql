@@ -46,14 +46,14 @@ WHERE id = 5;
 
 -- calcular hash do sorteio
 UPDATE concurso
-SET hash_sorteio = calcular_hash(numeros_sorteados::varchar::int2[])
+SET hash_sorteio = calcular_hash(numeros_sorteados)
 WHERE id = 5;
 
 TRUNCATE calculo;
 
 -- calcular hash das apostas
 INSERT INTO calculo (id, hash)
-SELECT id, calcular_hash(numeros::varchar::int2[]) AS hash
+SELECT id, calcular_hash(numeros) AS hash
 FROM aposta
 WHERE id_concurso = 5;
 

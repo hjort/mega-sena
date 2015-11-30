@@ -54,20 +54,39 @@ pg_sortear_numeros(PG_FUNCTION_ARGS)
   PG_RETURN_POINTER(int2Array);
 }
 
+#define ARRPTR16(x)  ( (int16 *) ARR_DATA_PTR(x) )
+#define ARRNELEMS(x)  ArrayGetNItems(ARR_NDIM(x), ARR_DIMS(x))
+#define ARRISEMPTY(x)  (ARRNELEMS(x) == 0)
+
 // function calcular_hash(numeros int2[]): int8
 PG_FUNCTION_INFO_V1(pg_calcular_hash);
 Datum
 pg_calcular_hash(PG_FUNCTION_ARGS)
 {
-  int2vector *int2Array = (int2vector *) PG_GETARG_POINTER(0);
-  const int qtd = int2Array->dim1;
-  unsigned int nums[MAX_NUMEROS], i;
+  ArrayType *a = PG_GETARG_ARRAYTYPE_P_COPY(0);
+  unsigned int i, qtd, eta, nums[MAX_NUMEROS];
+  uint16 *da;
   uint64 hash = 0;
 
-  elog(DEBUG1, "pg_calcular_hash(qtd=%d)", qtd);
+//	CHECKARRVALID(a);
+  qtd = ARRNELEMS(a);
+  da = ARRPTR16(a);
+  eta = ARR_ELEMTYPE(a);
 
+  elog(DEBUG1, "pg_calcular_hash(qtd=%d, eta=%d)", qtd, eta);
+/*
+  elog(DEBUG1, "pg_calcular_hash(qtd=%d)", qtd);
   elog(DEBUG2, "  [ndim=%d, dataoffset=%d, elemtype=%d, dim1=%d, lbound1=%d]",
     int2Array->ndim, int2Array->dataoffset, int2Array->elemtype, int2Array->dim1, int2Array->lbound1);
+*/
+
+  // se array estiver vazio, retorna 0
+  if (ARRISEMPTY(a)) {
+    PG_RETURN_INT64(0ULL);
+  }
+
+  //for (i = 0; i < qtd; i++)
+  //  elog(DEBUG2, "  da[%d] = %d", i, da[i]);
 
 /*
   // sanity checks: int2vector must be 1-D, 0-based, no nulls
@@ -91,13 +110,13 @@ pg_calcular_hash(PG_FUNCTION_ARGS)
   }
 
   memset(nums, 0, sizeof(nums));
-
   for (i = 0; i < qtd; i++)
-    nums[i] = int2Array->values[i];
+    nums[i] = da[i];
 
   // calcular o hash do array de números
   hash = hash_aposta(nums, qtd);
 
+  pfree(a);
   PG_RETURN_INT64(hash);
 }
 
