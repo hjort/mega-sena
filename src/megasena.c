@@ -66,6 +66,24 @@ pg_calcular_hash(PG_FUNCTION_ARGS)
 
   elog(DEBUG1, "pg_calcular_hash(qtd=%d)", qtd);
 
+  elog(DEBUG2, "  [ndim=%d, dataoffset=%d, elemtype=%d, dim1=%d, lbound1=%d]",
+    int2Array->ndim, int2Array->dataoffset, int2Array->elemtype, int2Array->dim1, int2Array->lbound1);
+
+/*
+  // sanity checks: int2vector must be 1-D, 0-based, no nulls
+  if (ARR_NDIM(int2Array) != 1 ||
+      ARR_HASNULL(int2Array) ||
+      ARR_ELEMTYPE(int2Array) != INT2OID ||
+      ARR_LBOUND(int2Array)[0] != 0)
+    ereport(ERROR, (errcode(ERRCODE_INVALID_BINARY_REPRESENTATION),
+      errmsg("invalid int2vector data")));
+
+  // check length for consistency with int2vectorin()
+  if (ARR_DIMS(int2Array)[0] > MAX_NUMEROS)
+    ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
+      errmsg("oidvector has too many elements")));
+*/
+
   // verificar quantidade máxima de itens
   if (qtd > MAX_NUMEROS) {
     elog(ERROR, "Quantidade de itens ultrapassa o limite: %d (máx: %d)", qtd, MAX_NUMEROS);

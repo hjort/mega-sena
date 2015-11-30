@@ -15,6 +15,7 @@
 
 #include "fmgr.h"
 #include "utils/array.h"
+#include "catalog/pg_type.h"
 //#include "utils/builtins.h"
 
 // 8 bytes
