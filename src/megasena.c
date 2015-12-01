@@ -9,9 +9,7 @@
 #include "postgres.h"
 #include "megasena.h"
 
-//#ifdef PG_MODULE_MAGIC
 PG_MODULE_MAGIC;
-//#endif
 
 // function sortear_numeros(min_num int, max_num int, min_qtd int, max_qtd int): int2[]
 PG_FUNCTION_INFO_V1(pg_sortear_numeros);
@@ -28,16 +26,22 @@ pg_sortear_numeros(PG_FUNCTION_ARGS)
 
   elog(DEBUG1, "pg_sortear_numeros(%d, %d, %d, %d)", min_num, max_num, min_qtd, max_qtd);
 
-  // TODO: evitar situações de loop infinito (sanity check) - ex: sortear_numeros(1, 2, 3, 4)
-  /*
-  if (...) {
-    elog(ERROR, "xaxaxaxa: %d (máx: %d)", qtd, MAX_NUMEROS);
-    PG_RETURN_NULL();
+  // evitar situações de loop infinito (sanity check) - ex: sortear_numeros(1, 2, 3, 4)
+  if (min_num <= 0 || max_num <= 0 || min_qtd <= 0 || max_qtd <= 0) {
+    elog(ERROR, "Os argumentos devem ser todos números inteiros positivos");
   }
-  */
+  if (min_num > max_num) {
+    elog(ERROR, "Número mínimo (%d) deve ser menor ou igual ao número máximo (%d)", min_num, max_num);
+  }
+  if (min_qtd > max_qtd) {
+    elog(ERROR, "Quantidade mínima (%d) deve ser menor ou igual à quantidade máxima (%d)", min_qtd, max_qtd);
+  }
+  if (max_num - min_num + 1 < max_qtd) {
+    elog(ERROR, "Quantidade de números no intervalo ([%d..%d] => %d) deve ser igual ou superior à quantidade máxima (%d)", min_num, max_num, (max_num - min_num + 1), max_qtd);
+  }
 
   // sortear números conforme parâmetros
-  qtd = sortear(&nums, min_num, max_num, min_qtd, max_qtd);
+  qtd = sortear((int**) &nums, min_num, max_num, min_qtd, max_qtd);
 
   /*
   elog(DEBUG1, "qtd = %d", qtd);
@@ -49,14 +53,14 @@ pg_sortear_numeros(PG_FUNCTION_ARGS)
   for (i = 0; i < qtd; i++)
     int2s[i] = (uint16) nums[i];
 
-  int2Array = buildint2vector(int2s, qtd);
+  int2Array = (int2vector*) buildint2vector(int2s, qtd);
 
   PG_RETURN_POINTER(int2Array);
 }
 
-#define ARRPTR16(x)  ( (int16 *) ARR_DATA_PTR(x) )
+#define ARRPTR16(x)   ((uint16 *) ARR_DATA_PTR(x))
 #define ARRNELEMS(x)  ArrayGetNItems(ARR_NDIM(x), ARR_DIMS(x))
-#define ARRISEMPTY(x)  (ARRNELEMS(x) == 0)
+#define ARRISEMPTY(x) (ARRNELEMS(x) == 0)
 
 // function calcular_hash(numeros int2[]): int8
 PG_FUNCTION_INFO_V1(pg_calcular_hash);
@@ -64,49 +68,39 @@ Datum
 pg_calcular_hash(PG_FUNCTION_ARGS)
 {
   ArrayType *a = PG_GETARG_ARRAYTYPE_P_COPY(0);
-  unsigned int i, qtd, eta, nums[MAX_NUMEROS];
+  unsigned int i, qtd, tipo, nums[MAX_NUMEROS];
   uint16 *da;
   uint64 hash = 0;
 
-//	CHECKARRVALID(a);
   qtd = ARRNELEMS(a);
+  tipo = ARR_ELEMTYPE(a);
   da = ARRPTR16(a);
-  eta = ARR_ELEMTYPE(a);
 
-  elog(DEBUG1, "pg_calcular_hash(qtd=%d, eta=%d)", qtd, eta);
-/*
-  elog(DEBUG1, "pg_calcular_hash(qtd=%d)", qtd);
-  elog(DEBUG2, "  [ndim=%d, dataoffset=%d, elemtype=%d, dim1=%d, lbound1=%d]",
-    int2Array->ndim, int2Array->dataoffset, int2Array->elemtype, int2Array->dim1, int2Array->lbound1);
-*/
+  elog(DEBUG1, "pg_calcular_hash(qtd=%d, tipo=%d)", qtd, tipo);
+
+  // sanity checks: int2vector must be 1-D, 0-based, no nulls
+  if (ARR_NDIM(a) != 1 || ARR_HASNULL(a) || ARR_ELEMTYPE(a) != INT2OID /*|| ARR_LBOUND(a)[0] != 0*/) {
+    elog(ERROR, "Argumento inválido: tipo de dados deve ser smallint[]");
+  }
 
   // se array estiver vazio, retorna 0
   if (ARRISEMPTY(a)) {
     PG_RETURN_INT64(0ULL);
   }
 
-  //for (i = 0; i < qtd; i++)
-  //  elog(DEBUG2, "  da[%d] = %d", i, da[i]);
-
-/*
-  // sanity checks: int2vector must be 1-D, 0-based, no nulls
-  if (ARR_NDIM(int2Array) != 1 ||
-      ARR_HASNULL(int2Array) ||
-      ARR_ELEMTYPE(int2Array) != INT2OID ||
-      ARR_LBOUND(int2Array)[0] != 0)
-    ereport(ERROR, (errcode(ERRCODE_INVALID_BINARY_REPRESENTATION),
-      errmsg("invalid int2vector data")));
-
-  // check length for consistency with int2vectorin()
-  if (ARR_DIMS(int2Array)[0] > MAX_NUMEROS)
-    ereport(ERROR, (errcode(ERRCODE_INVALID_PARAMETER_VALUE),
-      errmsg("oidvector has too many elements")));
-*/
+  for (i = 0; i < qtd; i++)
+    elog(DEBUG2, "  da[%d] = %d", i, da[i]);
 
   // verificar quantidade máxima de itens
   if (qtd > MAX_NUMEROS) {
     elog(ERROR, "Quantidade de itens ultrapassa o limite: %d (máx: %d)", qtd, MAX_NUMEROS);
-    PG_RETURN_NULL();
+  }
+
+  // verificar todos os itens do array
+  for (i = 0; i < qtd; i++) {
+    if (da[i] <= 0) {
+      elog(ERROR, "Todos os números devem ser inteiros positivos (inválido: %d)", da[i]);
+    }
   }
 
   memset(nums, 0, sizeof(nums));
@@ -114,7 +108,7 @@ pg_calcular_hash(PG_FUNCTION_ARGS)
     nums[i] = da[i];
 
   // calcular o hash do array de números
-  hash = hash_aposta(nums, qtd);
+  hash = hash_aposta((int*) nums, (int) qtd);
 
   pfree(a);
   PG_RETURN_INT64(hash);
