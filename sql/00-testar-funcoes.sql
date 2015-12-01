@@ -1,4 +1,8 @@
-SET client_min_messages TO debug1;
+CREATE EXTENSION IF NOT EXISTS megasena;
+
+---------------------------------------------------------------------------------------------------
+
+SET client_min_messages TO debug2;
 
 -- function sortear_numeros(min_num int, max_num int, min_qtd int, max_qtd int): int2[]
 SELECT sortear_numeros(1, 60, 6, 6) AS sorteio;
@@ -23,6 +27,10 @@ FROM (
 
 ---------------------------------------------------------------------------------------------------
 
+/*
 SELECT calcular_hash(sortear_numeros(1, 60, 6, 6));
 SELECT numeros_sorteados, calcular_hash(numeros_sorteados) FROM concurso WHERE id = 5;
+*/
+
+SET client_min_messages TO error;
 

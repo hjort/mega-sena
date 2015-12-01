@@ -1,3 +1,4 @@
+-- concurso
 DROP TABLE IF EXISTS concurso CASCADE;
 CREATE TABLE concurso (
   id serial not null primary key,
@@ -13,14 +14,18 @@ CREATE TABLE concurso (
   ganhadores_quadra int,
   premiacao_quadra numeric(12,2)
 );
+\d concurso
 
+-- loterica
 DROP TABLE IF EXISTS loterica CASCADE;
 CREATE TABLE loterica (
   id serial not null primary key,
   municipio varchar not null,
   uf char(2) not null
 );
+\d loterica
 
+-- aposta
 DROP TABLE IF EXISTS aposta CASCADE;
 CREATE TABLE aposta (
   id serial8 not null primary key,
@@ -31,7 +36,9 @@ CREATE TABLE aposta (
 );
 ALTER TABLE aposta ADD FOREIGN KEY (id_concurso) REFERENCES concurso (id);
 ALTER TABLE aposta ADD FOREIGN KEY (id_loterica) REFERENCES loterica (id);
+\d aposta
 
+-- calculo
 DROP TABLE IF EXISTS calculo CASCADE;
 CREATE TABLE calculo (
   id int8 not null primary key,
@@ -40,4 +47,5 @@ CREATE TABLE calculo (
 );
 ALTER TABLE calculo ADD FOREIGN KEY (id) REFERENCES aposta (id);
 CREATE INDEX ON calculo (acertos);
+\d calculo
 
