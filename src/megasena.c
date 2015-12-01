@@ -53,7 +53,7 @@ pg_sortear_numeros(PG_FUNCTION_ARGS)
   for (i = 0; i < qtd; i++)
     int2s[i] = (uint16) nums[i];
 
-  int2Array = (int2vector*) buildint2vector(int2s, qtd);
+  int2Array = (int2vector*) construir_int2vector(int2s, qtd);
 
   PG_RETURN_POINTER(int2Array);
 }
@@ -229,5 +229,31 @@ int sortear(int** nums,
   }
 
   return qtd;
+}
+
+#define Int2VectorSize(n)  (offsetof(int2vector, values) + (n) * sizeof(int16))
+
+/**
+ * Constrói um int2vector a partir de um array de int2s.
+ * Retirado de: pgsql/src/backend/utils/adt/int.c
+ */
+int2vector *
+construir_int2vector(const int16 *int2s, const int n)
+{
+  int2vector *res;
+
+  res = (int2vector *) palloc0(Int2VectorSize(n));
+
+  if (n > 0 && int2s)
+    memcpy(res->values, int2s, n * sizeof(int16));
+
+  SET_VARSIZE(res, Int2VectorSize(n));
+  res->ndim = 1;           // 1 dimensão
+  res->dataoffset = 0;     // sem nulos
+  res->elemtype = INT2OID; // tipo int2
+  res->dim1 = n;           // n itens
+  res->lbound1 = 0;        // índice inicia em 0
+
+  return res;
 }
 

@@ -23,10 +23,6 @@ FROM (
 
 ---------------------------------------------------------------------------------------------------
 
--- FIXME: assim não funciona...
-SELECT numeros_sorteados, calcular_hash(numeros_sorteados) FROM concurso WHERE id = 5;
--- forçando a conversão intermediária para "varchar" vai!
-SELECT numeros_sorteados, calcular_hash(numeros_sorteados::varchar::int2[]) FROM concurso WHERE id = 5;
-
 SELECT calcular_hash(sortear_numeros(1, 60, 6, 6));
+SELECT numeros_sorteados, calcular_hash(numeros_sorteados) FROM concurso WHERE id = 5;
 

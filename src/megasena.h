@@ -39,6 +39,7 @@ int8 hash_aposta(const int[], const int);
 //int str2nums(int**, const char*);
 int acertos(const int8, const int8);
 int sortear(int**, const int, const int, const int, const int);
+int2vector *construir_int2vector(const int16*, const int);
 
 #endif   /* MEGASENA_H */
 
