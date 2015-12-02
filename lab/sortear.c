@@ -7,7 +7,7 @@
 /**
  * Dadas as condições, preenche um array de números inteiros.
  */
-int sortear_numeros(int** nums,
+int sortear_numeros(int nums[],
   const int min_num, const int max_num, const int min_qtd, const int max_qtd)
 {
   int i, j, qtd, num;
@@ -45,7 +45,7 @@ int main()
 
   //qtd = sortear_numeros((int**) &nums, 1, 6, 1, 2);
   //qtd = sortear_numeros((int**) &nums, 1, 60, 6, 6);
-  qtd = sortear_numeros(&nums, 1, 60, 6, 15);
+  qtd = sortear_numeros(nums, 1, 60, 6, 15);
 
   printf("qtd = %d\n", qtd);
   for (i = 0; i < qtd; i++)
