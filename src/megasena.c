@@ -41,7 +41,7 @@ pg_sortear_numeros(PG_FUNCTION_ARGS)
   }
 
   // sortear números conforme parâmetros
-  qtd = sortear((int**) &nums, min_num, max_num, min_qtd, max_qtd);
+  qtd = sortear(nums, min_num, max_num, min_qtd, max_qtd);
 
   /*
   elog(DEBUG1, "qtd = %d", qtd);
@@ -205,7 +205,7 @@ acertos(const int8 hash_sorteado, const int8 hash_aposta)
 /**
  * Dadas as condições, preenche um array de números inteiros.
  */
-int sortear(int** nums,
+int sortear(int nums[],
   const int min_num, const int max_num, const int min_qtd, const int max_qtd)
 {
   int i, j, qtd, num = 0;
