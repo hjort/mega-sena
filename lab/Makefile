@@ -1,6 +1,6 @@
 CFLAGS = -g #-lm
 
-BINS = mega aposta bintests exp ulli sortear
+BINS = mega aposta bintests exp ulli sortear intptr
 
 all: ${BINS}
 
@@ -14,6 +14,7 @@ aposta: aposta.c
 bintests: bintests.c
 ulli: ulli.c
 sortear: sortear.c
+intptr: intptr.c
 
 exp: exp.c
 	cc exp.c -lm -o exp
