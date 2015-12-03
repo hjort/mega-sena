@@ -28,7 +28,7 @@ FROM (
       FROM generate_series(6, 15) n
     ) a
   ) b
-) x, concurso c
+) x, concurso c, generate_series(1, 3) -- N=3: multiplicador
 WHERE c.id = 5;
 
 /*
